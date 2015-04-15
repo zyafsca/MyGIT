@@ -7,7 +7,7 @@ public class Test {
 		String s = "abcsefg";
 		
 		System.out.println(s.substring(2, 5));
-		//"";
+		
 	}
 
 }
