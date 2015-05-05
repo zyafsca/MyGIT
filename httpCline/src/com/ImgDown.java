@@ -93,7 +93,12 @@ public class ImgDown implements Runnable {
 		if (!nUrl.equals(oldUrl)) {
 
 			oldUrl = nUrl;
-			saveImg(sUrl);
+			try {
+				saveImg(sUrl, false);
+			} catch (Exception e) {
+				log.error(e);
+				saveImg(sUrl, true);
+			}
 
 			this.findImg(nUrl, false);
 		} else {
@@ -136,11 +141,17 @@ public class ImgDown implements Runnable {
 		return s;
 	}
 
-	public void saveImg(String url) throws Exception {
+	public void saveImg(String url, boolean isRemoveFile) throws Exception {
 		client = HttpClient.getHttpClient();
 		InputStream in = client.getContentByStream(url);
 		String fileName = url.substring(url.lastIndexOf("/") + 1);
 		File file = new File(this.getSavePath() + File.separator + fileName);
+
+		if (isRemoveFile) {
+			if (file.exists()) {
+				file.delete();
+			}
+		}
 
 		if (!file.exists()) {
 			FileOutputStream out = new FileOutputStream(file);
