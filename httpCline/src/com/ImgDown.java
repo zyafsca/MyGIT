@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 public class ImgDown implements Runnable {
-	
+
 	private static Logger log = Logger.getLogger(ImgDown.class);
 	private String url = "";
 	private String savePath;
@@ -27,8 +27,7 @@ public class ImgDown implements Runnable {
 	public ImgDown(String url) {
 		this.url = url;
 		this.savePath = Running.props.getProperty("savePath");
-		
-		
+
 	}
 
 	public String getSavePath() {
@@ -45,20 +44,18 @@ public class ImgDown implements Runnable {
 		// 创建文件夹
 		if (mkdir) {
 			String title = getTitle(content);
-			if (title != null){
+			if (title != null) {
 				String path = getSavePath() + File.separator + title;
-				
+
 				File file = new File(path);
 				if (!file.exists()) {
 					file.mkdir();
 				}
-				
+
 				setSavePath(path);
 			}
 
-
-			File flag = new File(getSavePath() + File.separator
-					+ "readme.txt");
+			File flag = new File(getSavePath() + File.separator + "readme.txt");
 			try {
 				flag.createNewFile();
 				FileWriter fw = new FileWriter(flag);
@@ -68,7 +65,7 @@ public class ImgDown implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 
 		line = content.split("\n");
@@ -80,6 +77,15 @@ public class ImgDown implements Runnable {
 			}
 		}
 		String nUrl = getNextPageUrl(imgLine);
+
+		if (nUrl == null) {
+			if (oldUrl != null) {
+				log.info("try again!");
+				this.findImg(oldUrl, false);
+			} else
+				return;
+		}
+
 		String sUrl = getImgUrl(imgLine);
 
 		client.close();
@@ -102,7 +108,7 @@ public class ImgDown implements Runnable {
 			s = s.substring(7, s.length() - 8);
 			s = s.replace("\\", "").replace("|", "").replace("/", "")
 					.replace("?", "").replace(":", "");
-			
+
 			return s;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -112,6 +118,12 @@ public class ImgDown implements Runnable {
 
 	public String getNextPageUrl(String html) {
 		String s = matcher("href=\"(.*?)\"", html);
+		if (s == null) {
+			log.info("href is null!");
+			log.info(html);
+			return null;
+		}
+
 		s = s.replace("\"", "");
 		s = s.replace("href=", "");
 		return s;
@@ -125,27 +137,27 @@ public class ImgDown implements Runnable {
 	}
 
 	public void saveImg(String url) throws Exception {
-			client = HttpClient.getHttpClient();
-			InputStream in = client.getContentByStream(url);
-			String fileName = url.substring(url.lastIndexOf("/") + 1);
-			File file = new File(this.getSavePath() + File.separator + fileName);
+		client = HttpClient.getHttpClient();
+		InputStream in = client.getContentByStream(url);
+		String fileName = url.substring(url.lastIndexOf("/") + 1);
+		File file = new File(this.getSavePath() + File.separator + fileName);
 
-			if (!file.exists()) {
-				FileOutputStream out = new FileOutputStream(file);
-				len = 0;
-				bytes = new byte[1024];
-				while ((len = in.read(bytes)) != -1) {
-					out.write(bytes, 0, len);
-				}
-
-				out.flush();
-				out.close();
-				in.close();
+		if (!file.exists()) {
+			FileOutputStream out = new FileOutputStream(file);
+			len = 0;
+			bytes = new byte[1024];
+			while ((len = in.read(bytes)) != -1) {
+				out.write(bytes, 0, len);
 			}
 
-			log.info(fileName);
+			out.flush();
+			out.close();
+			in.close();
+		}
 
-			client.close();
+		log.info(fileName);
+
+		client.close();
 
 	}
 
